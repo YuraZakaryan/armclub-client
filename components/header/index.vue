@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-30 flex h-16 min-h-[60px] w-full items-center bg-slate-100 px-7">
+  <header class="sticky top-0 z-30 flex h-16 w-full items-center bg-slate-100 px-7 mobile-max-xl:hidden">
     <HeaderLogo />
     <HeaderNav />
   </header>

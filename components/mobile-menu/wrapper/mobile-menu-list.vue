@@ -1,5 +1,5 @@
 <template>
-  <ul class="mobile-max-m: mt-3 flex w-full items-center justify-between px-20 py-0 mobile-max-xl:px-2.5"></ul>
+  <ul class="flex w-full items-center justify-between px-20 mobile-max-xl:px-2.5">
+    <slot />
+  </ul>
 </template>
-
-<script setup lang="ts"></script>

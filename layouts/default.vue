@@ -1,7 +1,7 @@
 <template>
   <div class="bg-slate-100">
     <Header />
-    <Main><slot /></Main>
+    <main class="min-h-[calc(100vh-3rem)] mobile-min-xl:min-h-[calc(100vh-4rem)]"><slot /></main>
     <MobileMenu />
   </div>
 </template>
