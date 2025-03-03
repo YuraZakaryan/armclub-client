@@ -2,9 +2,9 @@
   <section class="laptop-hd-min:hidden">
     <!--    <MenuMobile />-->
   </section>
-  <section class="w-full laptop-hd-max:hidden">
+  <section class="laptop-hd-max:hidden w-full">
     <NavLinkWrapper>
-      <!--      <HeaderUiHeaderNavSearch />-->
+      <HeaderSearch />
       <NavLinkItem title="Գլխավոր" path="/" />
       <NavLinkItem title="Մեր մասին" path="/about-us" />
       <!--      <NavInfoWrapper>-->
@@ -31,4 +31,5 @@
 <script lang="ts" setup>
 import NavLinkWrapper from './../../wrapper/nav-link-wrapper.vue';
 import NavLinkItem from './../../wrapper/nav-link-item.vue';
+import HeaderSearch from './../../ui/header-search/index.vue';
 </script>

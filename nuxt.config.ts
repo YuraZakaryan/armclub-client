@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   modules: ['@nuxt/image', '@nuxt/ui', '@nuxt/fonts', '@pinia/nuxt', 'nuxt-file-storage', '@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
+  colorMode: {
+    preference: 'light',
+  },
   vite: {
     plugins: [tailwindcss()],
   },

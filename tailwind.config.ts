@@ -8,6 +8,7 @@ export default {
     './app.vue',
     './error.vue',
   ],
+  darkMode: 'false',
   theme: {
     extend: {
       screens: {

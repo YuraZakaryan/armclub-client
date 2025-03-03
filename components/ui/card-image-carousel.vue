@@ -1,0 +1,80 @@
+<template>
+  <UCarousel
+    v-if="pictures.length > 1"
+    v-slot="{ item, index }"
+    ref="carouselRef"
+    :items="pictures || []"
+    :ui="{ dots: 'top-[110px]', dot: 'w-3 h-1' }"
+    dots
+    @mousemove="handleMouseMove"
+  >
+    <div class="mobile-max:h-[190px] overflow-hidden transition-all duration-350 hover:scale-110">
+      <NuxtImg
+        :src="item"
+        :alt="'Image ' + (index + 1)"
+        class="pointer-events-none mx-auto h-[160px] w-full object-cover select-none"
+        draggable="false"
+        @contextmenu.prevent
+      />
+    </div>
+  </UCarousel>
+  <NuxtImg
+    v-else
+    :src="pictures[0]"
+    :alt="'Image 1'"
+    class="pointer-events-none h-[160px] select-none"
+    draggable="false"
+    @contextmenu.prevent
+  />
+</template>
+
+<script lang="ts" setup>
+import type { IPropertyImageCarouselProps } from '../types';
+
+const props = defineProps<IPropertyImageCarouselProps>();
+const carouselRef = ref();
+
+const pictures = computed(() => {
+  const mainPicture = props.picture ? props.picture : null;
+  const pictures =
+    props.pictures
+      ?.map((picture) => ({
+        ...picture,
+        fullPath: picture.path,
+      }))
+      .sort((a, b) => a.index - b.index) || [];
+
+  return mainPicture ? [mainPicture, ...pictures.map((p) => p.fullPath)] : pictures.map((p) => p.fullPath);
+});
+
+// const startAutoplay = () => {
+//   const autoplay = carouselRef.value?.emblaApi?.plugins().autoplay;
+//   if (autoplay && !autoplay.isPlaying()) {
+//     autoplay.play();
+//   }
+// };
+//
+// const stopAutoplay = () => {
+//   const autoplay = carouselRef.value?.emblaApi?.plugins().autoplay;
+//   if (autoplay && autoplay.isPlaying()) {
+//     autoplay.stop();
+//   }
+// };
+
+const handleMouseMove = (event: MouseEvent) => {
+  const emblaApi = carouselRef.value?.emblaApi;
+  if (!emblaApi) return;
+
+  const carouselNode = carouselRef.value.$el as HTMLElement;
+  const rect = carouselNode.getBoundingClientRect();
+
+  const mouseX = event.clientX - rect.left;
+  const carouselWidth = rect.width;
+  const progress = Math.max(0, Math.min(1, mouseX / carouselWidth));
+
+  const scrollLength = emblaApi.scrollSnapList().length - 1;
+  const targetIndex = progress * scrollLength;
+
+  emblaApi.scrollTo(Math.round(targetIndex), false);
+};
+</script>
