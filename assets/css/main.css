@@ -10,3 +10,7 @@ button,
 :disabled {
     cursor: default;
 }
+
+:root {
+    --ui-border-inverted: #4CAF50;
+}
