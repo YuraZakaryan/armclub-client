@@ -1,5 +1,5 @@
 <template>
-  <button class="glitch_button rounded text-white transition-all" :data-glitch="props.label">
+  <button class="glitch_button rounded text-center text-white transition-all" :data-glitch="props.label">
     {{ props.label }}
   </button>
 </template>

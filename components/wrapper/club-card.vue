@@ -1,6 +1,6 @@
 <template>
   <li
-    class="flex max-w-[300px] shrink-0 flex-col overflow-hidden rounded-lg bg-gradient-to-b from-gray-50 to-white pb-2 shadow-lg mobile-min-m:w-full mobile-max-m:max-w-full"
+    class="flex max-w-[310px] shrink-0 flex-col overflow-hidden rounded-lg bg-gradient-to-b from-gray-50 to-white pb-2 shadow-lg mobile-min-m:w-full mobile-max-m:max-w-full"
   >
     <section class="relative">
       <CustomBadge
@@ -40,24 +40,26 @@
         </div>
       </div>
 
-      <div class="mt-2 h-[1px] w-full bg-gray-200" />
-      <p class="mt-1 line-clamp-2 text-xs text-gray-600 first-letter:uppercase mobile-max-xl:hidden">
-        {{ props.club.description || 'Նկարագրությունը բացակայում է' }}
-      </p>
-
+      <div class="mt-2 h-[1px] w-full bg-gray-400" />
+      <UTooltip :text="props.club.description">
+        <p class="mt-1 line-clamp-2 text-xs text-gray-600 first-letter:uppercase mobile-max-xl:hidden">
+          {{ props.club.description || 'Նկարագրությունը բացակայում է' }}
+        </p>
+      </UTooltip>
       <div class="mt-2 flex items-center justify-between text-xs">
-        <span class="flex items-center gap-1">
-          <Icon
-            name="mdi:account-group-outline"
-            size="16"
-            :class="ClubService.getOccupancyColorClass(ClubService.calculateClubOccupancy(props.club.timers) || 0)"
-          />
-          <span class="mobile-max-l:hidden">Զբաղվածություն: </span>
-          <span>{{ ClubService.calculateClubOccupancy(props.club.timers) || 0 }}%</span>
-        </span>
+        <UTooltip text="Զբաղվածության աստիճան" :delay-duration="100">
+          <span class="flex cursor-help items-center gap-1">
+            <Icon
+              name="mdi:account-group-outline"
+              size="16"
+              :class="ClubService.getOccupancyColorClass(ClubService.calculateClubOccupancy(props.club.timers) || 0)"
+            />
+            <span>{{ ClubService.calculateClubOccupancy(props.club.timers) || 0 }}%</span>
+          </span>
+        </UTooltip>
         <GlitchButton
           label="Ավելին"
-          class="bg-emerald-500 px-2 py-1 text-sm hover:bg-emerald-600 mobile-max-xl:hidden"
+          class="bg-emerald-500 px-2 py-1 hover:bg-emerald-600 mobile-max-xl:hidden"
           @click="handleNavigate"
         />
       </div>

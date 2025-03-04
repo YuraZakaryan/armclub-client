@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5 py-5">
+  <div class="flex flex-col gap-5">
     <PosterCarousel />
     <CardWrapper>
       <ClubCard v-for="club in mockArmenianComputerClubs" :key="club._id" :club="club" />
