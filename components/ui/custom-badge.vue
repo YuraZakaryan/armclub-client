@@ -1,6 +1,6 @@
 <template>
   <UBadge :color="color || 'success'" class="z-20">
-    <span class="font-bold text-white select-none"><slot /></span>
+    <span class="font-bold text-white select-none mobile-max-l:text-[10px]"><slot /></span>
   </UBadge>
 </template>
 

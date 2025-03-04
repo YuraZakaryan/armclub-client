@@ -1,5 +1,5 @@
 import moment from 'moment-timezone';
-import type { TPausePeriod, TRating, TTimer } from '~/types';
+import type { TPausePeriod, TRating } from '~/types';
 
 export function isClubClosed(openingTime: string, closingTime: string): boolean {
   const currentTime: Date = new Date();
@@ -18,12 +18,6 @@ export function isClubClosed(openingTime: string, closingTime: string): boolean 
     return currentTime < opening || currentTime > closing;
   }
   return false;
-}
-export function calculateClubOccupancy(timers: Array<TTimer>): number {
-  const totalTimers: number = timers.length;
-  const activeTimers: number = timers.filter((timer: TTimer) => timer.isActive).length;
-
-  return Math.round((activeTimers / totalTimers) * 100);
 }
 
 export const calculatePercentTimer = (start: string, end: string, pausePeriods: TPausePeriod[]): number => {
@@ -80,14 +74,6 @@ export const calculateRemainingTime = (start: string, end: string): number => {
   return totalDuration - elapsedDuration;
 };
 
-export const calculateAverageRating = (ratings: Array<TRating>): number => {
-  if (ratings.length === 0) {
-    return 0;
-  }
-
-  const totalRating = ratings.reduce((sum, rating) => sum + rating.rating, 0);
-  return totalRating / ratings.length;
-};
 export const formatDate = (inputDate: string) => {
   const originalDate: Date = new Date(inputDate);
   originalDate.setHours(originalDate.getUTCHours() + 8);

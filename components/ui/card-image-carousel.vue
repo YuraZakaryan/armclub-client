@@ -4,28 +4,34 @@
     v-slot="{ item, index }"
     ref="carouselRef"
     :items="pictures || []"
-    :ui="{ dots: 'top-[110px]', dot: 'w-3 h-1' }"
+    :ui="{ dots: 'top-[110px] mobile-max-l:top-[70px]', dot: 'w-3 h-1' }"
     dots
     @mousemove="handleMouseMove"
   >
-    <div class="mobile-max:h-[190px] overflow-hidden transition-all duration-350 hover:scale-110">
+    <div
+      class="mobile-max:h-[190px] overflow-hidden mobile-min-xl:transition-all mobile-min-xl:duration-350 mobile-min-xl:hover:scale-110"
+    >
       <NuxtImg
         :src="item"
         :alt="'Image ' + (index + 1)"
-        class="pointer-events-none mx-auto h-[160px] w-full object-cover select-none"
+        class="pointer-events-none mx-auto h-[160px] w-full object-cover select-none mobile-max-l:h-[120px]"
         draggable="false"
         @contextmenu.prevent
       />
     </div>
   </UCarousel>
-  <NuxtImg
+  <div
     v-else
-    :src="pictures[0]"
-    :alt="'Image 1'"
-    class="pointer-events-none h-[160px] select-none"
-    draggable="false"
-    @contextmenu.prevent
-  />
+    class="mobile-max:h-[190px] overflow-hidden mobile-min-xl:transition-all mobile-min-xl:duration-350 mobile-min-xl:hover:scale-110 mobile-max-l:h-[120px]"
+  >
+    <NuxtImg
+      :src="pictures[0]"
+      :alt="'Image 1'"
+      class="pointer-events-none mx-auto h-[160px] w-full object-cover select-none mobile-max-xl:h-[120px]"
+      draggable="false"
+      @contextmenu.prevent
+    />
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -62,6 +68,10 @@ const pictures = computed(() => {
 // };
 
 const handleMouseMove = (event: MouseEvent) => {
+  if (!('onmousemove' in window) || window.matchMedia('(pointer: coarse)').matches) {
+    return;
+  }
+
   const emblaApi = carouselRef.value?.emblaApi;
   if (!emblaApi) return;
 

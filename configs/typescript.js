@@ -15,6 +15,7 @@ export const eslintPluginTypescriptConfig = [
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-extraneous-class': 'off',
     },
   },
 ];
