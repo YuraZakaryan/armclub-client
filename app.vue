@@ -1,12 +1,26 @@
 <template>
   <NuxtLoadingIndicator color="#6E5050" />
   <NuxtLayout>
-    <TooltipProvider>
+    <UApp>
       <NuxtPage />
-    </TooltipProvider>
+    </UApp>
   </NuxtLayout>
 </template>
 
-<script setup lang="ts">
-import { TooltipProvider } from 'reka-ui';
+<script lang="ts" setup>
+const sessionStore = useSessionStore();
+
+const { data: session } = useAuth();
+
+await sessionStore.fetchSession();
+
+watch(
+  () => session.value,
+  (newSession) => {
+    if (newSession) {
+      sessionStore.updateSession(session.value || null);
+    }
+  },
+  { deep: true, immediate: true },
+);
 </script>

@@ -17,3 +17,19 @@ export interface IPropertyImageCarouselProps {
   picture?: string;
   pictures?: TPicture[];
 }
+
+export type TClubsPosters = {
+  _id: string;
+  name: string;
+  poster: string;
+};
+
+export interface ICustomModalProps {
+  label: string;
+  closeModal: () => void;
+}
+
+export interface ICustomYandexMapProps {
+  latitudeMap: string;
+  longitudeMap: string;
+}

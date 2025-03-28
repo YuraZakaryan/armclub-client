@@ -1,4 +1,4 @@
-import type { TClub, TClubState, TFetchClubsBody, TGeocodeResponse, TReturnItem } from '~/types';
+import type { TClub, TClubSchema, TClubState, TFetchClubsBody, TGeocodeResponse, TReturnItem } from '~/types';
 import { defineStore } from 'pinia';
 
 export const useClubStore = defineStore('club', () => {
@@ -43,15 +43,17 @@ export const useClubStore = defineStore('club', () => {
     sort,
     order,
     clubStatuses,
+    authorId,
     updateState = true,
   }: TFetchClubsBody): Promise<TReturnItem<TClub[]>> => {
     try {
       const params: Record<string, string | number | boolean | 'asc' | 'desc' | undefined> = {
-        title: search || '',
+        name: search || '',
         limit: limit || 0,
         skip: page && limit ? (page - 1) * limit : 0,
         sort,
         order,
+        authorId,
         ...Object.fromEntries(
           Object.entries({
             clubStatuses: clubStatuses,
@@ -67,7 +69,7 @@ export const useClubStore = defineStore('club', () => {
         params.region = state.filters.region.value;
       }
 
-      const response = await $api<TReturnItem<TClub[]>>('/property/all', {
+      const response = await $api<TReturnItem<TClub[]>>('/club/all', {
         method: 'GET',
         params,
       });
@@ -92,9 +94,9 @@ export const useClubStore = defineStore('club', () => {
     }
   };
 
-  const fetchPropertyById = async (propertyId: string): Promise<TClub | null> => {
+  const fetchClubById = async (clubId: string): Promise<TClub | null> => {
     try {
-      const response = await $api<TClub>(`/club/${propertyId}`);
+      const response = await $api<TClub>(`/club/${clubId}`);
       state.currentClub = response;
 
       return response;
@@ -123,47 +125,51 @@ export const useClubStore = defineStore('club', () => {
     }
   };
 
-  // const create = async (body: TPropertySchema & { authorId: string }) => {
-  //   const {
-  //     authorId,
-  //     category,
-  //     region,
-  //     city,
-  //     state: propertyState,
-  //     buildingType,
-  //     balconyType,
-  //     viewOf,
-  //     mainCurrency,
-  //     amenities,
-  //   } = body;
-  //
-  //   try {
-  //     state.isRequestLoading = true;
-  //     await $api<TProperty>('property/create', {
-  //       method: 'POST',
-  //       body: {
-  //         ...body,
-  //         category: category.value || '',
-  //         region: region.value || '',
-  //         city: city.value || '',
-  //         state: propertyState?.value || '',
-  //         balconyType: balconyType?.value?.toLowerCase() || '',
-  //         viewOf: viewOf?.value?.toLowerCase() || '',
-  //         amenities: amenities?.map((amenity) => amenity?.value) || [],
-  //         buildingType: buildingType?.value || '',
-  //         mainCurrency: mainCurrency?.value === 'do_not_choose' ? '' : (mainCurrency?.value ?? ''),
-  //         author: authorId,
-  //       },
-  //     });
-  //
-  //     return true;
-  //   } catch (error) {
-  //     console.error('Error while creating:', error);
-  //     return false;
-  //   } finally {
-  //     state.isRequestLoading = false;
-  //   }
-  // };
+  const create = async (body: TClubSchema) => {
+    const { region, city } = body;
+
+    try {
+      state.isRequestLoading = true;
+      await $api<TClub>('club/create', {
+        method: 'POST',
+        body: {
+          ...body,
+          region: region.value || '',
+          city: city.value || '',
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error while creating:', error);
+      return false;
+    } finally {
+      state.isRequestLoading = false;
+    }
+  };
+
+  const update = async (body: TClubSchema & { clubId: string; priceDeleteIds: string[] }) => {
+    const { clubId, region, city } = body;
+    try {
+      state.isRequestLoading = true;
+      await $api<TClub>(`club/update/${clubId}`, {
+        method: 'PATCH',
+        body: {
+          ...body,
+          region: region.value || '',
+          city: city.value || '',
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error while updating:', error);
+      return false;
+    } finally {
+      state.isRequestLoading = false;
+    }
+  };
+
   //
   // const deleteProperty = async (id: string) => {
   //   try {
@@ -180,55 +186,15 @@ export const useClubStore = defineStore('club', () => {
   //   }
   // };
   //
-  // const update = async (body: TPropertySchema & { propId: string }) => {
-  //   const {
-  //     propId,
-  //     category,
-  //     region,
-  //     city,
-  //     state: propState,
-  //     balconyType,
-  //     viewOf,
-  //     buildingType,
-  //     mainCurrency,
-  //     amenities,
-  //   } = body;
-  //   try {
-  //     state.isRequestLoading = true;
-  //     await $api<TProperty>(`property/update/${propId}`, {
-  //       method: 'PATCH',
-  //       body: {
-  //         ...body,
-  //         category: category.value || '',
-  //         region: region.value || '',
-  //         city: city.value || '',
-  //         state: propState?.value || '',
-  //         balconyType: balconyType?.value?.toLowerCase() || '',
-  //         viewOf: viewOf?.value?.toLowerCase() || '',
-  //         amenities: amenities?.map((amenity) => amenity?.value) || [],
-  //         buildingType: buildingType?.value || '',
-  //         mainCurrency: mainCurrency?.value === EPropertyMainCurrency.DO_NOT_CHOOSE ? '' : (mainCurrency?.value ?? ''),
-  //       },
-  //     });
-  //
-  //     return true;
-  //   } catch (error) {
-  //     console.error('Error while updating:', error);
-  //     return false;
-  //   } finally {
-  //     state.isRequestLoading = false;
-  //   }
-  // };
 
   return {
     state,
     getCoordinatesFromAddress,
-    fetchProperties,
-    fetchPropertyById,
+    fetchClubById,
     handleRegionCitiesClear,
     clearCurrentProperty,
-    // create,
-    // update,
-    // deleteProperty,
+    fetchClubs,
+    create,
+    update,
   };
 });

@@ -11,6 +11,11 @@ export default {
   darkMode: 'false',
   theme: {
     extend: {
+      colors: {
+        primary: {
+          light: '#6a7282',
+        },
+      },
       screens: {
         // min-width
         'mobile-min-s': { min: '320px' },

@@ -1,11 +1,10 @@
-import type { TClub, TReturnItem } from '~/types';
+import type { TClub } from '~/types';
 
 export interface TTimer {
   _id: string;
   index?: number;
-  title: string;
-  remainingTime: string;
-  defineTime: string;
+  name: string;
+  allocatedTime: number;
   isInfinite: boolean;
   start: string;
   end: string;
@@ -24,6 +23,15 @@ export interface TTimer {
 export type TPausePeriod = {
   start: string;
   end: string | null;
+};
+
+export type TFetchTimersBody = {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  clubId?: string;
 };
 
 export type TFinishedTimer = {
@@ -47,12 +55,10 @@ export type TTimerHistories = {
   club: TClub;
 };
 
-export type TTimerInitialState = {
-  timerEditDialog: boolean;
-  timers: TReturnItem<TTimer[]>;
-  // startTimer: TRequestStatus;
-  // editTimer: TRequestStatus;
-  // updateInfoTimer: TRequestStatus;
-  // stopTimer: TRequestStatus;
-  // togglePauseTimer: TRequestStatus;
+export type TTimerState = {};
+
+export type TTimerValues = {
+  passed: string;
+  remaining: string;
+  progress: number;
 };

@@ -1,22 +1,32 @@
 import type { TComment, TFavorite, TRating, TUser, TTimer, TTimerHistories, TReturnItem, TSelectOption } from '~/types';
 import type { TPicture } from '~/components/types';
 
+export type TPrice = {
+  _id?: string;
+  name: string;
+  amount: number;
+  currency?: 'AMD' | 'USD' | 'RUB';
+  club?: string;
+  active?: boolean;
+};
+
 export type TClub = {
   _id: string;
-  title: string;
-  description: string;
+  name: string;
   info: string;
+  additionalInfo: string;
   region: string;
   city: string;
   address: string;
+  countryCode: string;
   phone: string;
-  views: number;
+  view: number;
   picture: string;
   posterPicture: string;
   pictures: TPicture[];
   comments: TComment[];
   ratings: TRating[];
-  prices: string[];
+  prices: TPrice[];
   timers: TTimer[];
   timerHistories: TTimerHistories[];
   favourites: TFavorite[];
@@ -51,6 +61,7 @@ export type TFetchClubsBody = {
   limit?: number;
   sort?: string;
   order?: 'asc' | 'desc';
+  authorId?: string;
   clubStatuses?: boolean[];
   updateState?: boolean;
 };

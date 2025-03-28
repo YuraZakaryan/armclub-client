@@ -38,15 +38,22 @@
 import type { IPropertyImageCarouselProps } from '../types';
 
 const props = defineProps<IPropertyImageCarouselProps>();
+const config = useRuntimeConfig();
+
 const carouselRef = ref();
 
 const pictures = computed(() => {
-  const mainPicture = props.picture ? props.picture : null;
+  const baseURL = config.public.NUXT_SITE_URL.startsWith('https')
+    ? config.public.NUXT_SITE_URL
+    : config.public.NUXT_API_BASE_URL;
+
+  const mainPicture = props.picture ? baseURL + '/' + props.picture : null;
+
   const pictures =
     props.pictures
       ?.map((picture) => ({
         ...picture,
-        fullPath: picture.path,
+        fullPath: baseURL + '/' + picture.path,
       }))
       .sort((a, b) => a.index - b.index) || [];
 

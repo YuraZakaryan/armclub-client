@@ -7,3 +7,8 @@ export interface IHeaderSearchProps {
   hideButton?: boolean;
   open?: boolean;
 }
+
+export interface INavItemProps {
+  title: string;
+  path: string;
+}

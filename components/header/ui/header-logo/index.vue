@@ -1,8 +1,8 @@
 <template>
   <div class="flex w-full items-center justify-between">
-    <NuxtLink to="/">
+    <CustomNuxtLink to="/">
       <NuxtImg src="/image/logo/logo.png" class="w-20 transition hover:contrast-75" alt="MYNEWHOME" />
-    </NuxtLink>
+    </CustomNuxtLink>
   </div>
 </template>
 

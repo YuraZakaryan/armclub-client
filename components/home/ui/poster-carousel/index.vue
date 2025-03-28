@@ -1,9 +1,9 @@
 <template>
-  <div v-show="!!data.length" class="w-full">
+  <div class="w-full">
     <UCarousel
       v-slot="{ item }"
       :autoplay="{ delay: 8000 }"
-      :items="data"
+      :items="props.posters"
       :ui="{
         container: 'transition-[height]',
         controls: 'absolute top-1/2 inset-x-16',
@@ -14,13 +14,39 @@
       arrows
       dots
     >
-      <NuxtImg :src="item" class="inset-x-16 h-44 w-full rounded-lg object-cover" />
+      <NuxtImg
+        :src="baseURL + '/' + item.poster"
+        class="inset-x-16 h-44 w-full cursor-pointer rounded-lg object-cover"
+        @click="handleNavigate(item)"
+      />
     </UCarousel>
   </div>
 </template>
 
 <script setup lang="ts">
-import { mockArmenianComputerClubs } from '~/mock-data/club';
+import { ClubService } from '~/utils/clubService';
+import type { IPosterCarouselProps } from '~/components/home/types';
+import type { TClubsPosters } from '~/components/types';
 
-const data = mockArmenianComputerClubs.map((club) => club.posterPicture);
+const props = defineProps<IPosterCarouselProps>();
+
+const localePath = useLocalePath();
+const config = useRuntimeConfig();
+const router = useRouter();
+
+const baseURL = config.public.NUXT_SITE_URL.startsWith('https')
+  ? config.public.NUXT_SITE_URL
+  : config.public.NUXT_API_BASE_URL;
+
+const handleNavigate = (poster: TClubsPosters) => {
+  const clubSlug = ClubService.slugifyClubName(poster.name);
+  const path = `${clubSlug}-${poster._id}`;
+
+  if (!clubSlug || !poster._id) {
+    console.error('Invalid club data for navigation');
+    return;
+  }
+
+  router.push(localePath(`/clubs/${path}`));
+};
 </script>

@@ -8,10 +8,14 @@
         class="absolute top-2 right-2 z-10"
         :color="ClubService.colorOfClubOpenStatus[props.club.open ? 'true' : 'false']"
       >
-        {{ props.club.open ? 'Բաց է' : 'Փակ է' }}
+        {{ props.club.open ? $t('club.opened') : $t('club.closed') }}
       </CustomBadge>
       <button class="w-full" @click="handleNavigate">
-        <CardImageCarousel v-if="props.club.pictures?.length" :pictures="props.club.pictures" />
+        <CardImageCarousel
+          v-if="props.club.pictures?.length"
+          :picture="props.club.picture"
+          :pictures="props.club.pictures"
+        />
         <NuxtImg v-else src="/img/no_image.png" class="h-[160px] w-full object-cover" alt="Нет изображения" />
       </button>
     </section>
@@ -22,7 +26,7 @@
           class="line-clamp-2 cursor-pointer text-sm font-semibold tracking-tight transition-colors hover:opacity-85 mobile-max-xl:text-xs"
           @click="handleNavigate"
         >
-          {{ props.club.title }}
+          {{ props.club.name }}
         </h3>
         <span class="text-xs font-medium whitespace-nowrap text-gray-500"
           >{{ ClubService.calculateAverageRating(props.club.ratings) || 0 }} ★</span
@@ -36,18 +40,18 @@
         </div>
         <div class="flex items-center gap-1">
           <Icon name="mdi:seat-outline" size="16" />
-          <span>Քանակը: {{ props.club.timers.length || 0 }} տեղ</span>
+          <span>{{ $t('club.quantity') }}: {{ props.club.timers.length || 0 }}</span>
         </div>
       </div>
 
       <div class="mt-2 h-[1px] w-full bg-gray-400" />
-      <UTooltip :text="props.club.description">
+      <UTooltip :text="props.club.info">
         <p class="mt-1 line-clamp-2 text-xs text-gray-600 first-letter:uppercase mobile-max-xl:hidden">
-          {{ props.club.description || 'Նկարագրությունը բացակայում է' }}
+          {{ props.club.info || 'Նկարագրությունը բացակայում է' }}
         </p>
       </UTooltip>
       <div class="mt-2 flex items-center justify-between text-xs">
-        <UTooltip text="Զբաղվածության աստիճան" :delay-duration="100">
+        <UTooltip :text="$t('club.employment_degree')" :delay-duration="100">
           <span class="flex cursor-help items-center gap-1">
             <Icon
               name="mdi:account-group-outline"
@@ -58,7 +62,7 @@
           </span>
         </UTooltip>
         <GlitchButton
-          label="Ավելին"
+          :label="$t('club.more')"
           class="bg-emerald-500 px-2 py-1 hover:bg-emerald-600 mobile-max-xl:hidden"
           @click="handleNavigate"
         />
@@ -77,8 +81,17 @@ import GlitchButton from '~/components/wrapper/glitch-button.vue';
 
 const props = defineProps<IClubCard>();
 const router = useRouter();
+const localePath = useLocalePath();
 
 const handleNavigate = () => {
-  router.push(`/properties/${props.club._id}`);
+  const clubSlug = ClubService.slugifyClubName(props.club.name);
+  const path = `${clubSlug}-${props.club._id}`;
+
+  if (!clubSlug || !props.club._id) {
+    console.error('Invalid club data for navigation');
+    return;
+  }
+
+  router.push(localePath(`/clubs/${path}`));
 };
 </script>

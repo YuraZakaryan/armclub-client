@@ -1,4 +1,5 @@
 import type { TReturnItem } from '~/types';
+import type { Session } from 'next-auth';
 
 export type TRole = 'ADMIN' | 'MODERATOR' | 'USER';
 
@@ -7,6 +8,7 @@ export type TUser = {
   firstName: string;
   lastName: string;
   username: string;
+  password: string;
   email: string;
   countryCode: string;
   phone: string;
@@ -24,25 +26,31 @@ export type TAuthMode =
   | 'VERIFY_PASSWORD_RESET'
   | 'SET_PASSWORD_RESET';
 
+export type TActivationMode = 'REQUEST_ACTIVATION' | 'VERIFY_ACTIVATION_PASSWORD';
+
 export enum ERoles {
   ADMIN = 'admin',
   MODERATOR = 'moderator',
   USER = 'user',
 }
 
-export type TResetPassword = {
+export type TOtpWithEmail = {
   email?: string;
   otp?: string;
 };
 
 export type TUserState = {
   authMode: TAuthMode;
-  session: null;
+  activationMode: TActivationMode;
+  session: Session | null;
   user: TUser | null;
   currentUser: TUser | null;
   isRequestLoading: boolean;
+  isResendLoading: boolean;
   isPasswordRequestLoading: boolean;
-  resetPassword: TResetPassword;
+  isActivationRequestLoading: boolean;
+  resetPassword: TOtpWithEmail;
+  activationProfile: TOtpWithEmail;
   users: TReturnItem<TUser[]>;
 };
 
