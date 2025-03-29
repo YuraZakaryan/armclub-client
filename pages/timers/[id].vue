@@ -40,8 +40,9 @@
       </div>
       <UTable
         ref="table"
+        v-model:column-pinning="columnPinning"
         v-model:column-visibility="columnVisibility"
-        :data="mockData"
+        :data="data.items"
         :columns="columns"
         :loading="status === 'pending'"
         :ui="{
@@ -69,10 +70,11 @@
 
 <script setup lang="ts">
 import MyClubSection from '~/components/my-clubs/wrapper/my-club-section.vue';
-import type { ICustomTableColumn, TReturnItem, TTimer, TTimerValues } from '~/types';
+import type { ICustomTableColumn, TPausePeriod, TReturnItem, TTimer, TTimerValues } from '~/types';
 import { useTimerStore } from '~/stores/timer';
 import MyClubHeader from '~/components/my-clubs/wrapper/my-club-header.vue';
-import { Icon, UButton, UProgress, UTooltip } from '#components';
+import { Icon, UButton, UButtonGroup, UProgress, UTooltip } from '#components';
+import SetTimerForm from '~/components/timer/ui/set-timer-form.vue';
 
 const { t } = useI18n();
 
@@ -101,13 +103,18 @@ const columnVisibility = ref({
   createdAt: false,
   updatedAt: false,
 });
+const columnPinning = ref({
+  left: ['view'],
+  right: ['action'],
+});
 const timerValues = ref<Record<string, TTimerValues>>({});
 
 let intervalId: NodeJS.Timeout | null = null;
+
 onMounted(() => {
-  DateService.updateTimerValues(timerValues, mockData);
+  DateService.updateTimerValues(timerValues, data.value.items);
   intervalId = setInterval(() => {
-    DateService.updateTimerValues(timerValues, mockData);
+    DateService.updateTimerValues(timerValues, data.value.items);
   }, 1000);
 });
 
@@ -127,10 +134,10 @@ const columns = computed<ICustomTableColumn<TTimer>[]>(() => [
     header: t('timer.name'),
   },
   {
-    accessorKey: 'start',
+    accessorKey: 'startedAt',
     header: t('timer.start'),
     cell: ({ row }) => {
-      const startTime = row.getValue('start') as string;
+      const startTime = row.getValue('startedAt') as string;
       return h(UTooltip, { text: DateService.convertMomentDateToMinutes(startTime) || '--:--:--' }, () =>
         h('span', DateService.convertMomentDateToMinutes(startTime) || '--:--:--'),
       );
@@ -141,8 +148,10 @@ const columns = computed<ICustomTableColumn<TTimer>[]>(() => [
     header: t('timer.allocated_time'),
     cell: ({ row }) => {
       const time = row.getValue('allocatedTime') as number;
-      return h(UTooltip, { text: DateService.minutesToTimeString(time, 0, false) || '--:--:--' }, () =>
-        h('span', DateService.minutesToTimeString(time, 0, false) || '--:--:--'),
+      const getAllocatedTime = DateService.minutesToTimeString(time, 0, false);
+
+      return h(UTooltip, { text: getAllocatedTime !== '00:00' ? getAllocatedTime : '--:--:--' }, () =>
+        h('span', getAllocatedTime !== '00:00' ? getAllocatedTime : '--:--:--'),
       );
     },
   },
@@ -151,16 +160,30 @@ const columns = computed<ICustomTableColumn<TTimer>[]>(() => [
     header: t('timer.progress'),
     cell: ({ row }) => {
       const id = row.original._id;
+      const isInfinite = row.original.isInfinite;
+      const isActive = row.original.isActive;
       const progress = timerValues.value[id]?.progress || 0;
 
-      return h(UProgress, {
-        modelValue: progress,
-        color: 'success',
-        size: 'sm',
-        min: 0,
-        max: 100,
-        status: true,
-      });
+      if (!isActive) {
+        return h('span', '--:--:--');
+      }
+
+      if (isInfinite) {
+        return h(UProgress, {
+          animation: 'swing',
+          color: 'warning',
+          size: 'sm',
+        });
+      } else {
+        return h(UProgress, {
+          modelValue: progress,
+          color: 'success',
+          size: 'sm',
+          min: 0,
+          max: 100,
+          status: true,
+        });
+      }
     },
   },
   {
@@ -169,6 +192,7 @@ const columns = computed<ICustomTableColumn<TTimer>[]>(() => [
     cell: ({ row }) => {
       const id = row.original._id;
       const formattedPassed = timerValues.value[id]?.passed || '--:--:--';
+
       return h(UTooltip, { text: formattedPassed }, () => h('span', formattedPassed));
     },
   },
@@ -178,16 +202,21 @@ const columns = computed<ICustomTableColumn<TTimer>[]>(() => [
     cell: ({ row }) => {
       const id = row.original._id;
       const formattedRemaining = timerValues.value[id]?.remaining || '--:--:--';
+
       return h(UTooltip, { text: formattedRemaining }, () => h('span', formattedRemaining));
     },
   },
   {
-    accessorKey: 'end',
     header: t('timer.end'),
     cell: ({ row }) => {
-      const endTime = row.getValue('end') as string;
-      return h(UTooltip, { text: DateService.convertMomentDateToMinutes(endTime) || '--:--:--' }, () =>
-        h('span', DateService.convertMomentDateToMinutes(endTime) || '--:--:--'),
+      const startTime = row.original.startedAt as string;
+      const allocatedTime = row.original.allocatedTime as number;
+      const pausePeriods = row.original.pausePeriods as TPausePeriod[];
+
+      return h(
+        UTooltip,
+        { text: DateService.calculateEndTime(startTime, allocatedTime, pausePeriods) || '--:--:--' },
+        () => h('span', DateService.calculateEndTime(startTime, allocatedTime, pausePeriods) || '--:--:--'),
       );
     },
   },
@@ -223,17 +252,27 @@ const columns = computed<ICustomTableColumn<TTimer>[]>(() => [
       );
     },
   },
+  {
+    header: t('table.edit'),
+    headerLabel: t('table.edit'),
+    cell: ({ row }) => {
+      return h(UButtonGroup, {}, [
+        h(UButton, { variant: 'outline', icon: 'mdi:play' }),
+        h(UButton, { variant: 'outline', icon: 'mdi:pause' }),
+        h(SetTimerForm, { timer: row.original }),
+      ]);
+    },
+  },
 ]);
 
-const mockData: TTimer[] = [
+const mockData: Ref<TTimer[]> = ref([
   {
     _id: '507f1f77bcf86cd799439011',
     index: 1,
     name: 'Morning Session',
-    allocatedTime: 120,
+    allocatedTime: 360,
     isInfinite: false,
-    start: '2025-03-28T08:37:36Z',
-    end: '2025-03-28T10:37:36Z',
+    startedAt: '2025-03-28T08:37:36Z',
     isActive: true,
     paused: false,
     price: 1000,
@@ -250,9 +289,8 @@ const mockData: TTimer[] = [
     name: 'Infinite Timer',
     allocatedTime: 0,
     isInfinite: true,
-    start: '2025-03-28T08:37:36Z',
-    end: '',
-    isActive: true,
+    startedAt: '2025-03-28T08:37:36Z',
+    isActive: false,
     paused: false,
     price: 800,
     waitingCount: null,
@@ -263,7 +301,7 @@ const mockData: TTimer[] = [
     createdAt: '2025-03-26T09:50:00Z',
     updatedAt: '2025-03-26T10:35:00Z',
   },
-];
+]);
 
 const { data, status } = await useLazyAsyncData<TReturnItem<TTimer[]>>(
   'timers',

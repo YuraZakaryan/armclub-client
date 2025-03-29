@@ -7,23 +7,31 @@ export const useModalStore = defineStore('modal', () => {
     isClubCrudOpen: false,
   });
 
-  const openModal = (modal: 'activation' | 'auth' | 'club') => {
-    if (modal === 'activation') {
+  const getModalState = (modal: keyof TModalState | `setTimer_${string}`): boolean => {
+    return state.value[modal] ?? false;
+  };
+
+  const openModal = (modal: keyof TModalState | `setTimer_${string}`): void => {
+    if (modal === 'isActivationOpen') {
       state.value.isActivationOpen = true;
-    } else if (modal === 'auth') {
+    } else if (modal === 'isAuthOpen') {
       state.value.isAuthOpen = true;
-    } else if (modal === 'club') {
+    } else if (modal === 'isClubCrudOpen') {
       state.value.isClubCrudOpen = true;
+    } else if (modal.startsWith('setTimer_')) {
+      state.value[modal] = true;
     }
   };
 
-  const closeModal = (modal: 'activation' | 'auth' | 'club') => {
-    if (modal === 'activation') {
+  const closeModal = (modal: keyof TModalState | `setTimer_${string}`): void => {
+    if (modal === 'isActivationOpen') {
       state.value.isActivationOpen = false;
-    } else if (modal === 'auth') {
+    } else if (modal === 'isAuthOpen') {
       state.value.isAuthOpen = false;
-    } else if (modal === 'club') {
+    } else if (modal === 'isClubCrudOpen') {
       state.value.isClubCrudOpen = false;
+    } else if (modal.startsWith('setTimer_')) {
+      state.value[modal] = false;
     }
   };
 
@@ -31,5 +39,6 @@ export const useModalStore = defineStore('modal', () => {
     state,
     openModal,
     closeModal,
+    getModalState,
   };
 });

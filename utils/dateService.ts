@@ -50,33 +50,12 @@ export class DateService {
     paused: boolean,
     now: moment.Moment = moment(),
   ): { minutes: number; seconds: number } {
-    const startTime = moment(start);
-
     if (!isActive) {
       return { minutes: 0, seconds: 0 };
     }
 
-    let pauseDuration = 0;
-    for (const period of pausePeriods) {
-      const pauseStart = moment(period.start);
-      const pauseEnd = moment(period.end);
-      pauseDuration += pauseEnd.diff(pauseStart, 'seconds');
-    }
+    const elapsedTime = this.calculateElapsedTime(start, pausePeriods, paused, now);
 
-    let elapsedTime: number;
-    if (paused) {
-      const lastPause = pausePeriods[pausePeriods.length - 1];
-      if (lastPause) {
-        const lastPauseStart = moment(lastPause.start);
-        elapsedTime = lastPauseStart.diff(startTime, 'seconds') - pauseDuration;
-      } else {
-        elapsedTime = 0;
-      }
-    } else {
-      elapsedTime = now.diff(startTime, 'seconds') - pauseDuration;
-    }
-
-    elapsedTime = Math.max(0, elapsedTime);
     return {
       minutes: Math.floor(elapsedTime / 60),
       seconds: elapsedTime % 60,
@@ -85,50 +64,23 @@ export class DateService {
 
   static calculateRemainingTime(
     start: string,
-    end: string,
+    allocatedTime: number,
     pausePeriods: TPausePeriod[],
     isActive: boolean,
     paused: boolean,
     now: moment.Moment = moment(),
   ): { minutes: number; seconds: number } {
-    const startTime = moment(start);
-    const endTime = moment(end);
-
-    if (!isActive || now.isAfter(endTime)) {
+    if (!isActive) {
       return { minutes: 0, seconds: 0 };
     }
 
-    if (now.isBefore(startTime)) {
-      const totalSeconds = endTime.diff(startTime, 'seconds');
-      return {
-        minutes: Math.floor(totalSeconds / 60),
-        seconds: totalSeconds % 60,
-      };
-    }
+    const totalDuration = allocatedTime * 60;
+    const pauseDuration = this.calculatePauseDuration(pausePeriods);
 
-    const totalDuration = endTime.diff(startTime, 'seconds');
-
-    let pauseDuration = 0;
-    for (const period of pausePeriods) {
-      const pauseStart = moment(period.start);
-      const pauseEnd = moment(period.end);
-      pauseDuration += pauseEnd.diff(pauseStart, 'seconds');
-    }
-
-    let elapsedTime: number;
-    if (paused) {
-      const lastPause = pausePeriods[pausePeriods.length - 1];
-      if (lastPause) {
-        const lastPauseStart = moment(lastPause.start);
-        elapsedTime = lastPauseStart.diff(startTime, 'seconds') - pauseDuration;
-      } else {
-        elapsedTime = 0;
-      }
-    } else {
-      elapsedTime = now.diff(startTime, 'seconds') - pauseDuration;
-    }
+    const elapsedTime = this.calculateElapsedTime(start, pausePeriods, paused, now);
 
     const remainingTime = totalDuration - pauseDuration - elapsedTime;
+
     if (remainingTime <= 0) {
       return { minutes: 0, seconds: 0 };
     }
@@ -141,7 +93,7 @@ export class DateService {
 
   static calculateProgressPercentage(
     start: string,
-    end: string,
+    allocatedTime: number,
     pausePeriods: TPausePeriod[],
     isActive: boolean,
     paused: boolean,
@@ -153,20 +105,12 @@ export class DateService {
     }
 
     const startTime: moment.Moment = moment(start);
-    const endTime: moment.Moment = moment(end);
 
-    if (now.isBefore(startTime)) {
+    if (!isActive || now.isBefore(startTime)) {
       return 0;
     }
 
-    if (now.isAfter(endTime)) {
-      return 100;
-    }
-
-    const totalDuration = endTime.diff(startTime, 'seconds');
-    if (totalDuration <= 0) {
-      return 0;
-    }
+    const totalDuration = allocatedTime * 60;
 
     const { minutes, seconds } = this.calculatePassedTime(start, pausePeriods, isActive, paused, now);
     const passedTimeSeconds = minutes * 60 + seconds;
@@ -176,21 +120,39 @@ export class DateService {
     return Math.round(Math.min(100, Math.max(0, percentage)));
   }
 
-  static updateTimerValues(timerValues: Ref<Record<string, TTimerValues>>, rows: TTimer[]) {
-    rows.forEach((row): void => {
-      if (!row.isActive) {
+  static calculateEndTime(
+    start: string,
+    allocatedTime: number,
+    pausePeriods: TPausePeriod[],
+    now: moment.Moment = moment(),
+  ): string {
+    const startTime = moment(start);
+    const pauseDuration = this.calculatePauseDuration(pausePeriods);
+    const totalDuration = allocatedTime * 60 - pauseDuration;
+    const endTime = startTime.add(totalDuration, 'seconds');
+
+    if (now.isAfter(endTime)) {
+      return now.format('HH:mm');
+    }
+
+    return endTime.format('HH:mm');
+  }
+
+  static updateTimerValues(timerValues: Ref<Record<string, TTimerValues>>, rows: TTimer[]): void {
+    rows.forEach((row: TTimer): void => {
+      if (!row.isActive || row.paused) {
         timerValues.value[row._id] = {
           passed: '--:--:--',
           remaining: '--:--:--',
           progress: 0,
-        };
+        } as TTimerValues;
         return;
       }
 
       const id: string = row._id;
       const isInfinite: boolean = row.isInfinite;
-      const start: string = row.start;
-      const end: string = row.end;
+      const start: string = row.startedAt;
+      const allocatedTime: number = row.allocatedTime;
       const pausePeriods: TPausePeriod[] = row.pausePeriods as TPausePeriod[];
       const isActive: boolean = row.isActive;
       const paused: boolean = row.paused;
@@ -201,24 +163,53 @@ export class DateService {
         isActive,
         paused,
       );
-      const passedFormatted = this.minutesToTimeString(passedMinutes, passedSeconds);
+      const passedFormatted: string = this.minutesToTimeString(passedMinutes, passedSeconds);
 
-      let remainingFormatted = '--:--:--';
+      let remainingFormatted: string = '--:--:--';
       if (!isInfinite) {
-        const { minutes, seconds } = this.calculateRemainingTime(start, end, pausePeriods, isActive, paused);
+        const { minutes, seconds } = this.calculateRemainingTime(start, allocatedTime, pausePeriods, isActive, paused);
         remainingFormatted = this.minutesToTimeString(minutes, seconds);
       }
 
-      let progress = 0;
+      let progress: number = 0;
       if (!isInfinite) {
-        progress = this.calculateProgressPercentage(start, end, pausePeriods, isActive, paused, isInfinite);
+        progress = this.calculateProgressPercentage(start, allocatedTime, pausePeriods, isActive, paused, isInfinite);
       }
 
       timerValues.value[id] = {
         passed: passedFormatted,
         remaining: remainingFormatted,
         progress,
-      };
+      } as TTimerValues;
     });
+  }
+
+  static calculateElapsedTime(
+    start: string,
+    pausePeriods: TPausePeriod[],
+    paused: boolean,
+    now: moment.Moment = moment(),
+  ): number {
+    const startTime = moment(start);
+    const pauseDuration = this.calculatePauseDuration(pausePeriods);
+    let elapsedTime: number;
+
+    if (paused && pausePeriods.length > 0) {
+      const lastPause = pausePeriods[pausePeriods.length - 1];
+      const lastPauseStart = moment(lastPause.startedAt);
+      elapsedTime = lastPauseStart.diff(startTime, 'seconds') - pauseDuration;
+    } else {
+      elapsedTime = now.diff(startTime, 'seconds') - pauseDuration;
+    }
+
+    return Math.max(0, elapsedTime);
+  }
+
+  static calculatePauseDuration(pausePeriods: TPausePeriod[]): number {
+    return pausePeriods.reduce((total, period) => {
+      const pauseStart = moment(period.startedAt);
+      const pauseEnd = moment(period.endedAt);
+      return total + pauseEnd.diff(pauseStart, 'seconds');
+    }, 0);
   }
 }

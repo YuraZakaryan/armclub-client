@@ -6,8 +6,7 @@ export interface TTimer {
   name: string;
   allocatedTime: number;
   isInfinite: boolean;
-  start: string;
-  end: string;
+  startedAt: string;
   isActive: boolean;
   paused: boolean;
   price: number | null;
@@ -21,8 +20,8 @@ export interface TTimer {
 }
 
 export type TPausePeriod = {
-  start: string;
-  end: string | null;
+  startedAt: string;
+  endedAt: string | null;
 };
 
 export type TFetchTimersBody = {

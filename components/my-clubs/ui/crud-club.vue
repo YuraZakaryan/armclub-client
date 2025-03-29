@@ -10,7 +10,7 @@
   />
 
   <CustomModal
-    v-model:open="modalState.isClubCrudOpen"
+    v-model:open="isModalOpen"
     :label="props.club ? $t('club.edit_club') : $t('club.create_club')"
     :close-modal="closeModal"
   >
@@ -169,7 +169,6 @@ import { clubSchema as schema } from '~/schema/schema';
 import CustomModal from '~/components/wrapper/custom-modal.vue';
 import type { TPicture } from '~/components/types';
 import type { InferType } from 'yup';
-import { UButton } from '#components';
 import { cities, countryCodes, phoneNumberData } from '~/utils';
 import SearchMapCoordinates from '~/components/my-clubs/ui/search-map-coordinates.vue';
 import ClubImagePicker from '~/components/my-clubs/ui/club-image-picker.vue';
@@ -184,7 +183,6 @@ const clubStore = useClubStore();
 const { t } = useI18n();
 const { showToast } = useCustomToast();
 
-const { state: modalState } = storeToRefs(modalStore);
 const { state: clubState } = storeToRefs(clubStore);
 
 const clubSchema = computed(() => schema(t));
@@ -267,12 +265,14 @@ const translatedCities = computed(() => {
   return [];
 });
 
+const isModalOpen = computed(() => modalStore.getModalState('isClubCrudOpen'));
+
 const openModal = (): void => {
-  modalStore.openModal('club');
+  modalStore.openModal('isClubCrudOpen');
 };
 
 const closeModal = (): void => {
-  modalStore.closeModal('club');
+  modalStore.closeModal('isClubCrudOpen');
 };
 
 const onSubmit = async (event: FormSubmitEvent<Schema>) => {
@@ -288,7 +288,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 
     if (updated) {
       showToast(t('club.success_update_message'), 'success');
-      modalStore.closeModal('club');
+      modalStore.closeModal('isClubCrudOpen');
 
       await props.refresh();
     } else {
@@ -299,7 +299,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 
     if (created) {
       showToast(t('club.success_create_message'), 'success');
-      modalStore.closeModal('club');
+      modalStore.closeModal('isClubCrudOpen');
 
       await props.refresh();
     } else {

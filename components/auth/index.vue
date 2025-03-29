@@ -8,7 +8,7 @@
       @click="handleOpen"
     />
 
-    <CustomModal v-model:open="modalState.isAuthOpen" :label="modalLabel[state.authMode]" :close-modal="closeModal">
+    <CustomModal v-model:open="isModalOpen" :label="modalLabel[state.authMode]" :close-modal="closeModal">
       <AuthUiLogin v-if="state.authMode === 'LOGIN'" />
       <AuthUiRegistration v-else-if="state.authMode === 'REGISTRATION'" />
       <AuthUiRequestPasswordReset v-else-if="state.authMode === 'REQUEST_PASSWORD_RESET'" />
@@ -31,14 +31,15 @@ const modalStore = useModalStore();
 const { t } = useI18n();
 
 const { state } = storeToRefs(store);
-const { state: modalState } = storeToRefs(modalStore);
+
+const isModalOpen = computed(() => modalStore.getModalState('isAuthOpen'));
 
 const handleOpen = () => {
-  modalStore.openModal('auth');
+  modalStore.openModal('isAuthOpen');
 };
 
 const closeModal = () => {
-  modalStore.closeModal('auth');
+  modalStore.closeModal('isAuthOpen');
   setTimeout(() => store.setAuthMode('LOGIN'), 300);
 };
 
